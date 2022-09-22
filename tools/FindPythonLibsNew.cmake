@@ -96,7 +96,7 @@ if(NOT PythonLibsNew_FIND_VERSION)
 endif()
 
 # Save variables that get set by PythonInterp
-macro(_PYBIND11_PUSH_IF_NOT_UNDEF name)
+macro(_PYBIND11_PUSH_IF_DEFINED name)
   if(DEFINED "${name}")
     set("_PYBIND11_ORIG_${name}" "${${name}}")
   endif()
