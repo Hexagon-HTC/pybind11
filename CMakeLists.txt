@@ -5,7 +5,9 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 
-cmake_minimum_required(VERSION 3.4)
+# ARCH_INDEPENDENT requires cmake 3.14, but we want to still use original cmake policies
+cmake_minimum_required(VERSION 3.14)
+cmake_policy(VERSION 2.8.12)
 
 # The `cmake_minimum_required(VERSION 3.4...3.18)` syntax does not work with
 # some versions of VS that have a patched CMake 3.11. This forces us to emulate
@@ -88,15 +90,15 @@ endif()
 # Options
 option(PYBIND11_INSTALL "Install pybind11 header files?" ${PYBIND11_MASTER_PROJECT})
 option(PYBIND11_TEST "Build pybind11 test suite?" ${PYBIND11_MASTER_PROJECT})
-option(PYBIND11_NOPYTHON "Disable search for Python" OFF)
+option(PYBIND11_NOPYTHON "Disable search for Python" ON)
 
 cmake_dependent_option(
   USE_PYTHON_INCLUDE_DIR
   "Install pybind11 headers in Python include directory instead of default installation prefix"
   OFF "PYBIND11_INSTALL" OFF)
 
-cmake_dependent_option(PYBIND11_FINDPYTHON "Force new FindPython" OFF
-                       "NOT CMAKE_VERSION VERSION_LESS 3.12" OFF)
+cmake_dependent_option(PYBIND11_FINDPYTHON "Force new FindPython" ON
+                       "NOT CMAKE_VERSION VERSION_LESS 3.12" ON)
 
 # NB: when adding a header don't forget to also add it to setup.py
 set(PYBIND11_HEADERS
@@ -176,10 +178,14 @@ if(NOT TARGET pybind11_headers)
 
   target_include_directories(
     pybind11_headers ${pybind11_system} INTERFACE $<BUILD_INTERFACE:${pybind11_INCLUDE_DIR}>
+                                                  $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIRS}>
                                                   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
   target_compile_features(pybind11_headers INTERFACE cxx_inheriting_constructors cxx_user_literals
                                                      cxx_right_angle_brackets)
+
+  target_compile_options(pybind11_headers INTERFACE "-fsized-deallocation"
+                                                       $<BUILD_INTERFACE:${PYBIND11_CPP_STANDARD}>)                                                   
 else()
   # It is invalid to install a target twice, too.
   set(PYBIND11_INSTALL OFF)
